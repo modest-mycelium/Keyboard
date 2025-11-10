@@ -82,6 +82,7 @@ import org.fossify.keyboard.helpers.LANGUAGE_TURKISH_Q
 import org.fossify.keyboard.helpers.LANGUAGE_UKRAINIAN
 import org.fossify.keyboard.helpers.LANGUAGE_VIETNAMESE_TELEX
 import org.fossify.keyboard.interfaces.ClipsDao
+import org.fossify.keyboard.interfaces.IClip
 
 val Context.config: Config get() = Config.newInstance(applicationContext.safeStorageContext)
 
@@ -110,7 +111,7 @@ val Context.inputMethodManager: InputMethodManager
 val Context.clipsDB: ClipsDao
     get() = ClipsDatabase.getInstance(applicationContext.safeStorageContext).ClipsDao()
 
-fun Context.getCurrentClip(): String? {
+fun Context.getCurrentClip(): IClip? {
     val clipboardManager = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
     return clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
 }
