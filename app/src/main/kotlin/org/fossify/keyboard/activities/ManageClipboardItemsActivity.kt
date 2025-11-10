@@ -19,6 +19,7 @@ import org.fossify.keyboard.dialogs.ExportClipsDialog
 import org.fossify.keyboard.extensions.clipsDB
 import org.fossify.keyboard.extensions.config
 import org.fossify.keyboard.helpers.ClipsHelper
+import org.fossify.keyboard.helpers.ITEM_TEXT_CLIP
 import org.fossify.keyboard.models.Clip
 import java.io.File
 import java.io.InputStream
@@ -161,7 +162,7 @@ class ManageClipboardItemsActivity : SimpleActivity(), RefreshRecyclerViewListen
         }
 
         ensureBackgroundThread {
-            val clips = clipsDB.getClips().map { it.value }
+            val clips = clipsDB.getClips().map { it.text }
             if (clips.isEmpty()) {
                 toast(R.string.no_entries_for_exporting)
                 return@ensureBackgroundThread
@@ -216,7 +217,7 @@ class ManageClipboardItemsActivity : SimpleActivity(), RefreshRecyclerViewListen
                 val token = object : TypeToken<List<String>>() {}.type
                 val clipValues = Gson().fromJson<ArrayList<String>>(inputStream.bufferedReader(), token) ?: ArrayList()
                 clipValues.forEach { value ->
-                    val clip = Clip(null, value)
+                    val clip = Clip(0, value, ITEM_TEXT_CLIP) // TODO: image?
                     if (ClipsHelper(this).insertClip(clip) > 0) {
                         clipsImported++
                     }

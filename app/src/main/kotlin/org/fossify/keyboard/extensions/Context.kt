@@ -38,6 +38,7 @@ import org.fossify.keyboard.R
 import org.fossify.keyboard.databases.ClipsDatabase
 import org.fossify.keyboard.helpers.Config
 import org.fossify.keyboard.helpers.INPUT_METHOD_SUBTYPE_VOICE
+import org.fossify.keyboard.helpers.ITEM_TEXT_CLIP
 import org.fossify.keyboard.helpers.LANGUAGE_ARABIC
 import org.fossify.keyboard.helpers.LANGUAGE_BELARUSIAN_CYRL
 import org.fossify.keyboard.helpers.LANGUAGE_BELARUSIAN_LATN
@@ -82,7 +83,7 @@ import org.fossify.keyboard.helpers.LANGUAGE_TURKISH_Q
 import org.fossify.keyboard.helpers.LANGUAGE_UKRAINIAN
 import org.fossify.keyboard.helpers.LANGUAGE_VIETNAMESE_TELEX
 import org.fossify.keyboard.interfaces.ClipsDao
-import org.fossify.keyboard.interfaces.IClip
+import org.fossify.keyboard.models.Clip
 
 val Context.config: Config get() = Config.newInstance(applicationContext.safeStorageContext)
 
@@ -111,9 +112,14 @@ val Context.inputMethodManager: InputMethodManager
 val Context.clipsDB: ClipsDao
     get() = ClipsDatabase.getInstance(applicationContext.safeStorageContext).ClipsDao()
 
-fun Context.getCurrentClip(): IClip? {
+fun Context.getCurrentClip(): Clip? {
     val clipboardManager = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
-    return clipboardManager.primaryClip?.getItemAt(0)?.text?.toString()
+
+    // TODO: re-implement
+    val desc = clipboardManager.primaryClip?.description ?: return null
+    val debugMsg = "label=${desc.label} $desc"
+
+    return Clip(0L, debugMsg, ITEM_TEXT_CLIP)
 }
 
 fun Context.getKeyboardBackgroundColor(): Int {

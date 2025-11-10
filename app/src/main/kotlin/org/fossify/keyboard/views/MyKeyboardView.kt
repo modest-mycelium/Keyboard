@@ -89,6 +89,7 @@ import org.fossify.keyboard.extensions.safeStorageContext
 import org.fossify.keyboard.helpers.AccessHelper
 import org.fossify.keyboard.helpers.EMOJI_SPEC_FILE_PATH
 import org.fossify.keyboard.helpers.EmojiData
+import org.fossify.keyboard.helpers.ITEM_TEXT_CLIP
 import org.fossify.keyboard.helpers.LANGUAGE_TURKISH_Q
 import org.fossify.keyboard.helpers.LANGUAGE_VIETNAMESE_TELEX
 import org.fossify.keyboard.helpers.LANGUAGE_VN_TELEX
@@ -107,11 +108,11 @@ import org.fossify.keyboard.helpers.cachedVNTelexData
 import org.fossify.keyboard.helpers.getCategoryIconRes
 import org.fossify.keyboard.helpers.parseRawEmojiSpecsFile
 import org.fossify.keyboard.helpers.parseRawJsonSpecsFile
+import org.fossify.keyboard.interfaces.IList
 import org.fossify.keyboard.interfaces.OnKeyboardActionListener
 import org.fossify.keyboard.interfaces.RefreshClipsListener
 import org.fossify.keyboard.models.Clip
 import org.fossify.keyboard.models.ClipsSectionLabel
-import org.fossify.keyboard.models.ListItem
 import java.util.Arrays
 import java.util.Locale
 
@@ -892,14 +893,17 @@ class MyKeyboardView @JvmOverloads constructor(
 
     private fun handleClipboard() {
         if (mToolbarHolder != null && mPopupParent.id != R.id.mini_keyboard_view && context.config.showClipboardContent) {
-            val clipboardContent = context.getCurrentClip()
-            if (clipboardContent?.isNotEmpty() == true) {
+            val clipboard = context.getCurrentClip()
+            if (clipboard != null) {
                 keyboardViewBinding?.apply {
                     clipboardValue.apply {
-                        text = clipboardContent
+                        text = clipboard.text // TODO: probably not the final implementation
                         removeUnderlines()
                         setOnClickListener {
-                            mOnKeyboardActionListener!!.onText(clipboardContent.toString())
+                            when (clipboard.itemViewType) {
+                                ITEM_TEXT_CLIP -> mOnKeyboardActionListener!!.onText(clipboard.text)
+                                else -> TODO("implement image behaviour")
+                            }
                             vibrateIfNeeded()
                         }
                     }
@@ -1584,35 +1588,35 @@ class MyKeyboardView @JvmOverloads constructor(
 
     private fun setupStoredClips() {
         ensureBackgroundThread {
-            val clips = ArrayList<ListItem>()
-            val clipboardContent = context.getCurrentClip()
+            val clipListItems = ArrayList<IList>()
+            val clipboard = context.getCurrentClip()
 
             val pinnedClips = context.clipsDB.getClips()
-            val isCurrentClipPinnedToo = pinnedClips.any {
-                clipboardContent?.isNotEmpty() == true && it.value.trim() == clipboardContent
+            val isCurrentClipPinnedToo = clipboard != null && pinnedClips.any {
+                it.text == clipboard.text
+                // TODO: insufficient check, should prob implement .equals in Clip
             }
 
-            if (!isCurrentClipPinnedToo && clipboardContent?.isNotEmpty() == true) {
+            if (!isCurrentClipPinnedToo && clipboard != null) {
                 val section = ClipsSectionLabel(context.getString(R.string.clipboard_current), true)
-                clips.add(section)
+                clipListItems.add(section)
 
-                val clip = Clip(-1, clipboardContent)
-                clips.add(clip)
+                clipListItems.add(Clip(-1, clipboard.dbValue, ITEM_TEXT_CLIP)) // TODO: images
             }
 
-            if (!isCurrentClipPinnedToo && clipboardContent?.isNotEmpty() == true) {
+            if (!isCurrentClipPinnedToo && clipboard != null) { // TODO: combine with prev if block?
                 val section = ClipsSectionLabel(context.getString(R.string.clipboard_pinned), false)
-                clips.add(section)
+                clipListItems.add(section)
             }
 
-            clips.addAll(pinnedClips)
+            clipListItems.addAll(pinnedClips)
             Handler(Looper.getMainLooper()).post {
-                setupClipsAdapter(clips)
+                setupClipsAdapter(clipListItems)
             }
         }
     }
 
-    private fun setupClipsAdapter(clips: ArrayList<ListItem>) {
+    private fun setupClipsAdapter(clips: ArrayList<IList>) {
         keyboardViewBinding?.apply {
             clipboardContentPlaceholder1.beVisibleIf(clips.isEmpty())
             clipboardContentPlaceholder2.beVisibleIf(clips.isEmpty())
@@ -1630,7 +1634,8 @@ class MyKeyboardView @JvmOverloads constructor(
             items = clips,
             refreshClipsListener = refreshClipsListener
         ) { clip ->
-            mOnKeyboardActionListener!!.onText(clip.value)
+            // TODO: different action for images
+            mOnKeyboardActionListener!!.onText(clip.text)
             vibrateIfNeeded()
         }
 

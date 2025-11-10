@@ -2,22 +2,28 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "af614a2263d4c4176a70e1121a2d16bc",
+    "identityHash": "cb6d8e8ab479ff094c9aacd1fc9b4b0f",
     "entities": [
       {
         "tableName": "clips",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `value` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `value` TEXT NOT NULL, `type` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
             "affinity": "INTEGER",
-            "notNull": false
+            "notNull": true
           },
           {
-            "fieldPath": "value",
+            "fieldPath": "dbValue",
             "columnName": "value",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemViewType",
+            "columnName": "type",
+            "affinity": "INTEGER",
             "notNull": true
           }
         ],
@@ -37,14 +43,12 @@
             "orders": [],
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_clips_id` ON `${TABLE_NAME}` (`id`)"
           }
-        ],
-        "foreignKeys": []
+        ]
       }
     ],
-    "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'af614a2263d4c4176a70e1121a2d16bc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cb6d8e8ab479ff094c9aacd1fc9b4b0f')"
     ]
   }
 }

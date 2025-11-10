@@ -26,7 +26,8 @@ const val RECENTLY_USED_EMOJIS = "recently_used_emojis"
 
 // differentiate current and pinned clips at the keyboards' Clipboard section
 const val ITEM_SECTION_LABEL = 0
-const val ITEM_CLIP = 1
+const val ITEM_TEXT_CLIP = 1
+const val ITEM_IMAGE_CLIP = 2
 
 const val LANGUAGE_ENGLISH_QWERTY = 0
 const val LANGUAGE_RUSSIAN = 1

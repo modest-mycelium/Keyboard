@@ -83,7 +83,7 @@ class ClipsActivityAdapter(
             ensureBackgroundThread {
                 activity.clipsDB.deleteAll()
                 items.forEach { clip ->
-                    clip.id = null
+                    clip.id = 0
                     clip.id = ClipsHelper(activity).insertClip(clip)
                 }
 
@@ -156,7 +156,7 @@ class ClipsActivityAdapter(
         val isSelected = selectedKeys.contains(clip.id!!.toInt())
         ItemClipInActivityBinding.bind(view).apply {
             root.setupViewBackground(activity)
-            clipValue.text = clip.value
+            clipValue.text = clip.text
             clipValue.setTextColor(textColor)
             clipDragHandle.applyColorFilter(textColor)
 

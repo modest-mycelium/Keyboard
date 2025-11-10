@@ -18,15 +18,14 @@ import org.fossify.keyboard.extensions.config
 import org.fossify.keyboard.extensions.getCurrentClip
 import org.fossify.keyboard.extensions.getStrokeColor
 import org.fossify.keyboard.helpers.ClipsHelper
-import org.fossify.keyboard.helpers.ITEM_CLIP
 import org.fossify.keyboard.helpers.ITEM_SECTION_LABEL
+import org.fossify.keyboard.interfaces.IList
 import org.fossify.keyboard.interfaces.RefreshClipsListener
 import org.fossify.keyboard.models.Clip
 import org.fossify.keyboard.models.ClipsSectionLabel
-import org.fossify.keyboard.models.ListItem
 
 class ClipsKeyboardAdapter(
-    val context: Context, var items: ArrayList<ListItem>, val refreshClipsListener: RefreshClipsListener,
+    val context: Context, var items: ArrayList<IList>, val refreshClipsListener: RefreshClipsListener,
     val itemClick: (clip: Clip) -> Unit
 ) : RecyclerView.Adapter<ClipsKeyboardAdapter.ViewHolder>() {
 
@@ -58,10 +57,7 @@ class ClipsKeyboardAdapter(
 
     override fun getItemCount() = items.size
 
-    override fun getItemViewType(position: Int) = when {
-        items[position] is ClipsSectionLabel -> ITEM_SECTION_LABEL
-        else -> ITEM_CLIP
-    }
+    override fun getItemViewType(position: Int) = items[position].itemViewType
 
     private fun setupClip(view: View, clip: Clip) {
         ItemClipOnKeyboardBinding.bind(view).apply {
@@ -70,8 +66,9 @@ class ClipsKeyboardAdapter(
             layerDrawable.findDrawableByLayerId(R.id.clipboard_background_stroke).applyColorFilter(context.getStrokeColor())
             layerDrawable.findDrawableByLayerId(R.id.clipboard_background_shape).applyColorFilter(backgroundColor)
 
+            // TODO: show text "paste image" with image icon if clip is ImageClip
             clipValue.apply {
-                text = clip.value
+                text = clip.text
                 removeUnderlines()
                 setTextColor(textColor)
             }
@@ -95,8 +92,7 @@ class ClipsKeyboardAdapter(
                     setOnClickListener {
                         ensureBackgroundThread {
                             val currentClip = context.getCurrentClip() ?: return@ensureBackgroundThread
-                            val clip = Clip(null, currentClip)
-                            ClipsHelper(context).insertClip(clip)
+                            ClipsHelper(context).insertClip(currentClip)
                             refreshClipsListener.refreshClips()
                             context.toast(R.string.text_pinned)
                             if (context.config.vibrateOnKeypress) {
