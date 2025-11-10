@@ -12,7 +12,7 @@ interface ClipsDao {
     fun getClips(): List<Clip>
 
     @Query("SELECT id FROM clips WHERE value = :value")
-    fun getClipWithValue(value: String): Long?
+    fun getClipWithValue(value: ByteArray): Long?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertOrUpdate(clip: Clip): Long

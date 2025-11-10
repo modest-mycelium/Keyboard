@@ -156,7 +156,7 @@ class ClipsActivityAdapter(
         val isSelected = selectedKeys.contains(clip.id!!.toInt())
         ItemClipInActivityBinding.bind(view).apply {
             root.setupViewBackground(activity)
-            clipValue.text = clip.text
+            clipValue.text = clip.asText
             clipValue.setTextColor(textColor)
             clipDragHandle.applyColorFilter(textColor)
 

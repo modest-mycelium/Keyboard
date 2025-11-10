@@ -89,6 +89,7 @@ import org.fossify.keyboard.extensions.safeStorageContext
 import org.fossify.keyboard.helpers.AccessHelper
 import org.fossify.keyboard.helpers.EMOJI_SPEC_FILE_PATH
 import org.fossify.keyboard.helpers.EmojiData
+import org.fossify.keyboard.helpers.ITEM_IMAGE_CLIP
 import org.fossify.keyboard.helpers.ITEM_TEXT_CLIP
 import org.fossify.keyboard.helpers.LANGUAGE_TURKISH_Q
 import org.fossify.keyboard.helpers.LANGUAGE_VIETNAMESE_TELEX
@@ -111,7 +112,6 @@ import org.fossify.keyboard.helpers.parseRawJsonSpecsFile
 import org.fossify.keyboard.interfaces.IList
 import org.fossify.keyboard.interfaces.OnKeyboardActionListener
 import org.fossify.keyboard.interfaces.RefreshClipsListener
-import org.fossify.keyboard.models.Clip
 import org.fossify.keyboard.models.ClipsSectionLabel
 import java.util.Arrays
 import java.util.Locale
@@ -897,12 +897,12 @@ class MyKeyboardView @JvmOverloads constructor(
             if (clipboard != null) {
                 keyboardViewBinding?.apply {
                     clipboardValue.apply {
-                        text = clipboard.text // TODO: probably not the final implementation
+                        text = if (clipboard.itemType == ITEM_TEXT_CLIP) clipboard.asText else "Paste Image" // TODO: i18n
                         removeUnderlines()
                         setOnClickListener {
-                            when (clipboard.itemViewType) {
-                                ITEM_TEXT_CLIP -> mOnKeyboardActionListener!!.onText(clipboard.text)
-                                else -> TODO("implement image behaviour")
+                            when (clipboard.itemType) {
+                                ITEM_TEXT_CLIP -> mOnKeyboardActionListener!!.onText(clipboard.asText)
+                                ITEM_IMAGE_CLIP -> mOnKeyboardActionListener!!.onText(clipboard.asText) // TODO: send image data
                             }
                             vibrateIfNeeded()
                         }
@@ -1589,25 +1589,19 @@ class MyKeyboardView @JvmOverloads constructor(
     private fun setupStoredClips() {
         ensureBackgroundThread {
             val clipListItems = ArrayList<IList>()
-            val clipboard = context.getCurrentClip()
+            val currClip = context.getCurrentClip()
 
             val pinnedClips = context.clipsDB.getClips()
-            val isCurrentClipPinnedToo = clipboard != null && pinnedClips.any {
-                it.text == clipboard.text
-                // TODO: insufficient check, should prob implement .equals in Clip
+            val isCurrentClipPinnedToo = currClip != null && pinnedClips.any { it == currClip }
+
+            if (!isCurrentClipPinnedToo && currClip != null) {
+                val currSection = ClipsSectionLabel(context.getString(R.string.clipboard_current), true)
+                clipListItems.add(currSection)
+                clipListItems.add(currClip)
             }
 
-            if (!isCurrentClipPinnedToo && clipboard != null) {
-                val section = ClipsSectionLabel(context.getString(R.string.clipboard_current), true)
-                clipListItems.add(section)
-
-                clipListItems.add(Clip(-1, clipboard.dbValue, ITEM_TEXT_CLIP)) // TODO: images
-            }
-
-            if (!isCurrentClipPinnedToo && clipboard != null) { // TODO: combine with prev if block?
-                val section = ClipsSectionLabel(context.getString(R.string.clipboard_pinned), false)
-                clipListItems.add(section)
-            }
+            val pinnedSection = ClipsSectionLabel(context.getString(R.string.clipboard_pinned), false)
+            clipListItems.add(pinnedSection)
 
             clipListItems.addAll(pinnedClips)
             Handler(Looper.getMainLooper()).post {
@@ -1635,7 +1629,7 @@ class MyKeyboardView @JvmOverloads constructor(
             refreshClipsListener = refreshClipsListener
         ) { clip ->
             // TODO: different action for images
-            mOnKeyboardActionListener!!.onText(clip.text)
+            mOnKeyboardActionListener!!.onText(clip.asText)
             vibrateIfNeeded()
         }
 

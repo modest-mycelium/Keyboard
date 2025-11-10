@@ -113,13 +113,25 @@ val Context.clipsDB: ClipsDao
     get() = ClipsDatabase.getInstance(applicationContext.safeStorageContext).ClipsDao()
 
 fun Context.getCurrentClip(): Clip? {
-    val clipboardManager = (getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
+    val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = clipboardManager.primaryClip ?: return null
+    val desc = clip.description ?: return null
 
-    // TODO: re-implement
-    val desc = clipboardManager.primaryClip?.description ?: return null
-    val debugMsg = "label=${desc.label} $desc"
+    val isText = desc.hasMimeType("text/*")
+    val isImage = desc.hasMimeType("image/*")
 
-    return Clip(0L, debugMsg, ITEM_TEXT_CLIP)
+    return if (isText && isImage) {
+        // TODO: how to handle complex clipboard?
+        Clip("complex clipboard")
+    } else if (isText) {
+        Clip(clip.getItemAt(0)?.text.toString())
+    } else {
+        val inputStream = contentResolver.openInputStream(clip.getItemAt(0)?.uri ?: return null)
+        val imageData = inputStream?.readBytes() ?: return null
+        inputStream.close()
+
+        Clip(imageData)
+    }
 }
 
 fun Context.getKeyboardBackgroundColor(): Int {

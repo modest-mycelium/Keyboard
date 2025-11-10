@@ -8,7 +8,7 @@ class ClipsHelper(val context: Context) {
 
     // make sure clips have unique values
     fun insertClip(clip: Clip): Long {
-        return if (context.clipsDB.getClipWithValue(clip.dbValue) == null) {
+        return if (context.clipsDB.getClipWithValue(clip.bytes) == null) {
             context.clipsDB.insertOrUpdate(clip)
         } else {
             -1

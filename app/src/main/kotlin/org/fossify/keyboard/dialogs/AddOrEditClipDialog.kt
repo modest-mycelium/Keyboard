@@ -10,14 +10,13 @@ import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.keyboard.R
 import org.fossify.keyboard.databinding.DialogAddOrEditClipBinding
 import org.fossify.keyboard.helpers.ClipsHelper
-import org.fossify.keyboard.helpers.ITEM_TEXT_CLIP
 import org.fossify.keyboard.models.Clip
 
 class AddOrEditClipDialog(val activity: BaseSimpleActivity, val originalClip: Clip?, val callback: () -> Unit) {
     init {
         val binding = DialogAddOrEditClipBinding.inflate(activity.layoutInflater).apply {
             if (originalClip != null) {
-                addClipValue.setText(originalClip.text)
+                addClipValue.setText(originalClip.asText)
             }
         }
 
@@ -34,7 +33,7 @@ class AddOrEditClipDialog(val activity: BaseSimpleActivity, val originalClip: Cl
                             return@setOnClickListener
                         }
 
-                        val clip = Clip(0, clipValue, ITEM_TEXT_CLIP) // TODO: image?
+                        val clip = Clip(clipValue) // TODO: image?
                         if (originalClip != null) {
                             clip.id = originalClip.id
                         }

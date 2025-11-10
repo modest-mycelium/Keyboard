@@ -57,7 +57,7 @@ class ClipsKeyboardAdapter(
 
     override fun getItemCount() = items.size
 
-    override fun getItemViewType(position: Int) = items[position].itemViewType
+    override fun getItemViewType(position: Int) = items[position].itemType
 
     private fun setupClip(view: View, clip: Clip) {
         ItemClipOnKeyboardBinding.bind(view).apply {
@@ -68,7 +68,7 @@ class ClipsKeyboardAdapter(
 
             // TODO: show text "paste image" with image icon if clip is ImageClip
             clipValue.apply {
-                text = clip.text
+                text = clip.asText
                 removeUnderlines()
                 setTextColor(textColor)
             }
