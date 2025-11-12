@@ -29,6 +29,9 @@ const val ITEM_SECTION_LABEL = 0
 const val ITEM_TEXT_CLIP = 1
 const val ITEM_IMAGE_CLIP = 2
 
+const val CURR_IMAGE_CLIP_URI_CODE = 1
+const val PINNED_IMAGE_CLIP_URI_CODE = 2
+
 const val LANGUAGE_ENGLISH_QWERTY = 0
 const val LANGUAGE_RUSSIAN = 1
 const val LANGUAGE_FRENCH_AZERTY = 2

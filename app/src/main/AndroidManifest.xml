@@ -3,6 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:installLocation="auto">
 
+    <queries>
+        <package android:name="${applicationId}" />
+        <provider android:authorities="${applicationId}.provider" />
+    </queries>
+
     <uses-permission
         android:name="android.permission.USE_FINGERPRINT"
         tools:node="remove" />
@@ -51,6 +56,12 @@
                 <action android:name="android.view.InputMethod" />
             </intent-filter>
         </service>
+        
+        <provider
+            android:name=".providers.ClipboardContentProvider"
+            android:enabled="true"
+            android:authorities="${applicationId}.provider"
+            android:exported="true" />
 
         <activity
             android:name=".activities.SettingsActivity"

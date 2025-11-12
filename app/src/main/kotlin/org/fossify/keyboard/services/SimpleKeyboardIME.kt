@@ -1,6 +1,7 @@
 package org.fossify.keyboard.services
 
 import android.annotation.SuppressLint
+import android.content.ClipDescription
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.drawable.Icon
@@ -9,10 +10,12 @@ import android.graphics.drawable.RippleDrawable
 import android.icu.text.BreakIterator
 import android.icu.util.ULocale
 import android.inputmethodservice.InputMethodService
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType.*
 import android.text.TextUtils
+import android.util.Log
 import android.util.Size
 import android.view.KeyEvent
 import android.view.View
@@ -32,17 +35,21 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat.Type
+import androidx.core.view.inputmethod.InputConnectionCompat
+import androidx.core.view.inputmethod.InputContentInfoCompat
 import androidx.core.view.updatePadding
 import org.fossify.commons.extensions.*
 import org.fossify.commons.helpers.*
 import org.fossify.keyboard.R
 import org.fossify.keyboard.databinding.KeyboardViewKeyboardBinding
 import org.fossify.keyboard.extensions.config
+import org.fossify.keyboard.extensions.getCurrentImageClipData
 import org.fossify.keyboard.extensions.getKeyboardBackgroundColor
 import org.fossify.keyboard.extensions.getStrokeColor
 import org.fossify.keyboard.extensions.safeStorageContext
 import org.fossify.keyboard.helpers.*
 import org.fossify.keyboard.interfaces.OnKeyboardActionListener
+import org.fossify.keyboard.providers.AUTHORITY
 import org.fossify.keyboard.views.MyKeyboardView
 import java.io.ByteArrayOutputStream
 import java.util.Locale
@@ -361,6 +368,20 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
     override fun onText(text: String) {
         currentInputConnection?.commitText(text, 1)
+    }
+
+    override fun onImage(current: Boolean) {
+        if (current) {
+            val mimeTypes = applicationContext.getCurrentImageClipData()?.description
+                ?.filterMimeTypes("image/*") ?: return
+            val uri = Uri.parse("content://$AUTHORITY/imageClip/curr")
+            val inputContentInfo = InputContentInfoCompat(uri, ClipDescription("", mimeTypes), null)
+
+            InputConnectionCompat.commitContent(currentInputConnection, currentInputEditorInfo, inputContentInfo, 0, null)
+            Log.d("imgclip", "committing content at ${inputContentInfo.contentUri} of mimetypes ${inputContentInfo.description.filterMimeTypes("*/*").joinToString()}")
+        } else {
+            // TODO: impl pinned image paste
+        }
     }
 
     override fun reloadKeyboard() {

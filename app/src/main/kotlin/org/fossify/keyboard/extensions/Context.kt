@@ -1,12 +1,17 @@
 package org.fossify.keyboard.extensions
 
 import android.app.KeyguardManager
+import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ContentResolver
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.inputmethodservice.InputMethodService
+import android.net.Uri
 import android.os.IBinder
 import android.os.UserManager
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +22,7 @@ import android.view.inputmethod.InputMethodManager
 import android.view.inputmethod.InputMethodSubtype
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.MimeTypeFilter
 import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.fossify.commons.databinding.DialogTitleBinding
@@ -38,7 +44,6 @@ import org.fossify.keyboard.R
 import org.fossify.keyboard.databases.ClipsDatabase
 import org.fossify.keyboard.helpers.Config
 import org.fossify.keyboard.helpers.INPUT_METHOD_SUBTYPE_VOICE
-import org.fossify.keyboard.helpers.ITEM_TEXT_CLIP
 import org.fossify.keyboard.helpers.LANGUAGE_ARABIC
 import org.fossify.keyboard.helpers.LANGUAGE_BELARUSIAN_CYRL
 import org.fossify.keyboard.helpers.LANGUAGE_BELARUSIAN_LATN
@@ -84,6 +89,7 @@ import org.fossify.keyboard.helpers.LANGUAGE_UKRAINIAN
 import org.fossify.keyboard.helpers.LANGUAGE_VIETNAMESE_TELEX
 import org.fossify.keyboard.interfaces.ClipsDao
 import org.fossify.keyboard.models.Clip
+import org.fossify.keyboard.providers.AUTHORITY
 
 val Context.config: Config get() = Config.newInstance(applicationContext.safeStorageContext)
 
@@ -112,26 +118,45 @@ val Context.inputMethodManager: InputMethodManager
 val Context.clipsDB: ClipsDao
     get() = ClipsDatabase.getInstance(applicationContext.safeStorageContext).ClipsDao()
 
-fun Context.getCurrentClip(): Clip? {
+fun Context.getCurrentClip(requestImage: Boolean = false): Clip? {
+    // todo: remove debug
+    Log.d("context.getcurrentclip", contentResolver.getType(Uri.parse("content://$AUTHORITY/imageClip/curr")) ?: "null")
+    // todo: end remove debug
+
     val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val clip = clipboardManager.primaryClip ?: return null
-    val desc = clip.description ?: return null
 
-    val isText = desc.hasMimeType("text/*")
-    val isImage = desc.hasMimeType("image/*")
+    val isText = clip.description.hasMimeType("text/*")
+    val isImage = clip.description.hasMimeType("image/*")
 
-    return if (isText && isImage) {
-        // TODO: how to handle complex clipboard?
-        Clip("complex clipboard")
-    } else if (isText) {
+    if (requestImage && !isImage) return null
+
+    return if (isText && !requestImage) { // TODO: it is possible for clipboard to contain text AND image clips, should handle
         Clip(clip.getItemAt(0)?.text.toString())
-    } else {
+    } else if (isImage) {
         val inputStream = contentResolver.openInputStream(clip.getItemAt(0)?.uri ?: return null)
         val imageData = inputStream?.readBytes() ?: return null
         inputStream.close()
 
-        Clip(imageData)
+        Clip(imageData, clip.description.filterMimeTypes("image/*")[0])
+    } else {
+        null
     }
+}
+
+fun Context.getCurrentImageClipType(): String? {
+    val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clipData = clipboardManager.primaryClip ?: return null
+    if (!clipData.description.hasMimeType("image/*")) return null
+
+    return clipData.description.filterMimeTypes("image/*")[0]
+}
+
+fun Context.getCurrentImageClipData(): ClipData? {
+    val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clipData = clipboardManager.primaryClip ?: return null
+
+    return if (clipData.description.hasMimeType("image/*")) clipData else null
 }
 
 fun Context.getKeyboardBackgroundColor(): Int {

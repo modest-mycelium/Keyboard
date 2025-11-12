@@ -902,7 +902,7 @@ class MyKeyboardView @JvmOverloads constructor(
                         setOnClickListener {
                             when (clipboard.itemType) {
                                 ITEM_TEXT_CLIP -> mOnKeyboardActionListener!!.onText(clipboard.asText)
-                                ITEM_IMAGE_CLIP -> mOnKeyboardActionListener!!.onText(clipboard.asText) // TODO: send image data
+                                ITEM_IMAGE_CLIP -> mOnKeyboardActionListener!!.onImage(current = true)
                             }
                             vibrateIfNeeded()
                         }

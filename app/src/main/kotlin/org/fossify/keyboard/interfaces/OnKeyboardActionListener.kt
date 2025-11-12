@@ -40,6 +40,12 @@ interface OnKeyboardActionListener {
     fun onText(text: String)
 
     /**
+     * Sends an image to the listener.
+     * TODO: documentationnn
+     */
+    fun onImage(current: Boolean)
+
+    /**
      * Called to force the KeyboardView to reload the keyboard
      */
     fun reloadKeyboard()
